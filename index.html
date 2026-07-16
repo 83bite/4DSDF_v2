@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Unseen Axis — 4D SDF</title>
+    <meta
+      name="description"
+      content="第四の方向 w をなぞりながら、4次元のかたちが3次元へ現れる瞬間を体験するインタラクティブ・プレイグラウンド。"
+    />
+    <meta name="theme-color" content="#07070b" />
+    <link rel="stylesheet" href="./styles.css?v=20260716-2" />
+  </head>
+  <body>
+    <main class="experience">
+      <header class="site-header">
+        <a class="brand" href="./" aria-label="The Unseen Axis ホーム">
+          <span class="brand-mark" aria-hidden="true">4</span>
+          <span>
+            <strong>The Unseen Axis</strong>
+            <small>4D SDF EXPERIENCE</small>
+          </span>
+        </a>
+
+        <div class="header-actions">
+          <button id="guide-toggle" class="text-button" type="button" aria-expanded="false" aria-controls="play-guide">
+            遊び方
+          </button>
+          <button id="open-inspector" class="round-button" type="button" aria-label="調整する" aria-expanded="false" aria-controls="inspector">
+            <span>調整する</span>
+            <span class="tune-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+          </button>
+        </div>
+      </header>
+
+      <section class="stage" aria-label="4次元オブジェクトの3次元表示">
+        <div class="stage-aura" aria-hidden="true"></div>
+        <div class="stage-orbit stage-orbit-a" aria-hidden="true"></div>
+        <div class="stage-orbit stage-orbit-b" aria-hidden="true"></div>
+        <div id="boot-visual" class="boot-visual" aria-hidden="true">
+          <span class="boot-orb"><i></i><i></i><i></i></span>
+          <strong>4Dのかたちを探しています</strong>
+          <small>数秒だけお待ちください</small>
+        </div>
+        <canvas id="viewport" aria-label="ドラッグで回転、ホイールまたはピンチで拡大縮小"></canvas>
+
+        <div id="boot-error" class="boot-error" hidden role="alert">
+          <strong>4Dの表示を開始できませんでした</strong>
+          <p id="boot-error-message">ページを再読み込みしてください。</p>
+          <button type="button" onclick="location.reload()">再読み込み</button>
+        </div>
+
+        <div id="guide-card" class="guide-card" hidden>
+          <button id="close-guide" class="icon-button" type="button" aria-label="説明を閉じる">×</button>
+          <p class="micro-label">ONE MORE DIRECTION</p>
+          <h2>「奥」のとなりに、もう一つ。</h2>
+          <p>
+            4次元では、縦・横・奥行きに加えて <em>w</em> という方向があります。
+            私たちは全体を直接見られないので、<em>w</em> の位置を動かし、現れる3次元の断面から想像します。
+          </p>
+          <p class="guide-tip"><span>試す</span> 下の W をゆっくり左右へ。形の変化そのものが、見えない方向の手がかりです。</p>
+        </div>
+
+        <div id="play-guide" class="play-guide" hidden aria-live="polite">
+          <div class="play-guide-head">
+            <span>はじめの30秒</span>
+            <span id="play-guide-count">1 / 3</span>
+          </div>
+          <div class="play-guide-body">
+            <span id="play-guide-icon" class="play-guide-icon" aria-hidden="true">W</span>
+            <div>
+              <h2 id="play-guide-title">まず、Wを動かす</h2>
+              <p id="play-guide-copy">下のスライダーを左右へ動かしてください。同じ4D物体の、違う3D断面が現れます。</p>
+            </div>
+          </div>
+          <div class="play-guide-progress" aria-hidden="true"><i class="is-current"></i><i></i><i></i></div>
+          <div class="play-guide-actions">
+            <button id="play-guide-skip" type="button">スキップ</button>
+            <button id="play-guide-next" type="button">次へ</button>
+          </div>
+        </div>
+
+        <div class="object-caption" aria-live="polite">
+          <p class="micro-label"><span id="mode-kicker">CROSS SECTION</span> <b aria-hidden="true"></b> <span id="shape-index">01 / 08</span></p>
+          <h1 id="object-name">Portal Loom</h1>
+          <p id="example-description">二つの円環が、見えない方向で編み合わさる。</p>
+          <div class="formula-card">
+            <p class="formula-label">DEFINITION <span>f(x,y,z,w) = 0</span></p>
+            <code id="object-formula">√[(√(x²+y²)−0.64)² + (√(z²+w²)−0.52)²] − 0.18 = 0</code>
+            <p id="formula-note">XY と ZW、二つの円環からの距離を組み合わせた管状面です。</p>
+            <div id="surface-legend" class="surface-legend" hidden>
+              <span><i class="surface-swatch surface-swatch-front"></i><b id="surface-primary-label">外向き面</b></span>
+              <span><i class="surface-swatch surface-swatch-inside"></i><b id="surface-secondary-label">内向き面</b></span>
+            </div>
+          </div>
+          <p class="play-goal"><span>HOW TO PLAY</span> Wを動かして、同じ4D物体の姿がどう変わるか探す。</p>
+        </div>
+
+        <div class="dimension-readout" aria-hidden="true">
+          <span>w</span>
+          <strong id="w-readout">+0.00</strong>
+        </div>
+
+        <div class="gesture-hint" id="gesture-hint">
+          <span class="drag-glyph" aria-hidden="true"></span>
+          <span>ドラッグして、かたちを撫でる</span>
+        </div>
+
+        <div class="intersection-signal" id="intersection-signal" aria-live="polite" hidden>
+          <i aria-hidden="true"></i>
+          <span id="intersection-signal-label">NO INTERSECTION</span>
+          <small id="intersection-signal-copy">この W には断面がありません</small>
+        </div>
+
+        <div class="build-status" aria-live="polite">
+          <span class="status-dot"></span>
+          <span id="status">4次元空間を準備中</span>
+          <span id="stats" class="stats">—</span>
+        </div>
+      </section>
+
+      <form id="controls" onsubmit="return false;">
+        <section class="control-dock" aria-label="体験コントロール">
+          <div class="preset-rail" id="preset-rail" role="group" aria-label="オブジェクトを選ぶ">
+            <span class="preset-label">形を選ぶ</span>
+            <button class="preset-button" type="button" data-preset-id="portalLoom" aria-current="true">Portal Loom</button>
+            <button class="preset-button" type="button" data-preset-id="twinWorlds" aria-current="false">Twin Worlds</button>
+            <button class="preset-button" type="button" data-preset-id="tesseract" aria-current="false">Tesseract</button>
+            <button class="preset-button" type="button" data-preset-id="hypersphere" aria-current="false">Hypersphere</button>
+          </div>
+
+          <div class="play-controls">
+            <div class="mode-switch" aria-label="表示方法">
+              <input id="mode-slice" name="mode" type="radio" value="slice" checked />
+              <label for="mode-slice">1枚の断面</label>
+              <input id="mode-project" name="mode" type="radio" value="project" />
+              <label for="mode-project">すべて重ねる</label>
+            </div>
+
+            <div class="w-control">
+              <div class="w-label">
+                <span>第四の方向 W</span>
+                <output data-value="sliceW" for="sliceW">0.00</output>
+              </div>
+              <input id="sliceW" name="sliceW" type="range" min="-1.4" max="1.4" step="0.01" value="0" />
+              <div class="range-ends" aria-hidden="true"><span>−W</span><span>0</span><span>+W</span></div>
+            </div>
+
+            <button id="drift" class="drift-button" type="button" aria-label="自動漂流を停止する" aria-pressed="true">
+              <span class="pause-bars" aria-hidden="true"><i></i><i></i></span>
+              <span><small>AUTO</small><strong>漂流中</strong></span>
+            </button>
+          </div>
+
+          <p id="mode-help" class="mode-help">いま見ているのは、4D形状を W の位置で切った「3Dの断面」です。</p>
+
+          <div class="progress" aria-hidden="true"><span id="progress-fill"></span></div>
+        </section>
+
+        <aside id="inspector" class="inspector" aria-hidden="true" aria-label="詳細設定" inert>
+          <div class="inspector-head">
+            <div>
+              <p class="micro-label">SCULPT THE UNSEEN</p>
+              <h2>4Dを調整する</h2>
+            </div>
+            <button id="close-inspector" class="icon-button" type="button" aria-label="詳細設定を閉じる">×</button>
+          </div>
+
+          <div class="inspector-scroll">
+            <section class="inspector-section">
+              <div class="section-heading">
+                <span>01</span>
+                <div><h3>Object</h3><p>出発点になる4次元形状</p></div>
+              </div>
+              <label class="select-wrap" for="example">
+                <select id="example" name="example"></select>
+              </label>
+              <div class="button-row">
+                <button id="load-example" class="primary-button" type="button">この形を読み込む</button>
+                <button id="reset-scene" type="button">形をリセット</button>
+              </div>
+            </section>
+
+            <section class="inspector-section">
+              <div class="section-heading">
+                <span>02</span>
+                <div><h3>4D Rotation</h3><p>w と交わる回転が、未知の姿をつくる</p></div>
+              </div>
+              <div class="slider-grid">
+                <label class="slider-field" for="xw"><span>XW <output data-value="xw">0</output></span><input id="xw" name="xw" type="range" min="0" max="180" value="38" /></label>
+                <label class="slider-field" for="yw"><span>YW <output data-value="yw">0</output></span><input id="yw" name="yw" type="range" min="0" max="180" value="29" /></label>
+                <label class="slider-field" for="zw"><span>ZW <output data-value="zw">0</output></span><input id="zw" name="zw" type="range" min="0" max="180" value="18" /></label>
+              </div>
+              <details class="fold">
+                <summary>3D空間の回転</summary>
+                <div class="slider-grid compact">
+                  <label class="slider-field" for="xy"><span>XY <output data-value="xy">0</output></span><input id="xy" name="xy" type="range" min="0" max="180" value="16" /></label>
+                  <label class="slider-field" for="xz"><span>XZ <output data-value="xz">0</output></span><input id="xz" name="xz" type="range" min="0" max="180" value="12" /></label>
+                  <label class="slider-field" for="yz"><span>YZ <output data-value="yz">0</output></span><input id="yz" name="yz" type="range" min="0" max="180" value="24" /></label>
+                </div>
+              </details>
+            </section>
+
+            <section class="inspector-section">
+              <div class="section-heading">
+                <span>03</span>
+                <div><h3>Expression</h3><p>SDFそのものを書き換える</p></div>
+              </div>
+              <label class="editor-label" for="function-source">
+                <span>FUNCTION BODY</span>
+                <span id="editor-status" class="editor-status">適用済み</span>
+              </label>
+              <textarea id="function-source" spellcheck="false"></textarea>
+              <div class="button-row button-row-3">
+                <button id="apply-code" class="primary-button" type="button">コードを適用</button>
+                <button id="revert-code" type="button">元に戻す</button>
+                <button id="rebuild" type="button">再構築</button>
+              </div>
+              <p id="helper-summary" class="helper-summary"></p>
+              <div id="error-box" class="error-box" hidden></div>
+            </section>
+
+            <details class="inspector-section sampling-section">
+              <summary>
+                <div class="section-heading">
+                  <span>04</span>
+                  <div><h3>Sampling</h3><p>描画精度と観測範囲</p></div>
+                </div>
+              </summary>
+              <div class="slider-grid sampling-grid">
+                <label class="slider-field" for="resolution"><span>精度 <output data-value="resolution">28</output></span><input id="resolution" name="resolution" type="range" min="14" max="36" value="28" /></label>
+                <label class="slider-field" for="wSamples"><span>Wサンプル <output data-value="wSamples">30</output></span><input id="wSamples" name="wSamples" type="range" min="8" max="48" value="30" /></label>
+                <label class="slider-field" for="bound"><span>空間範囲 <output data-value="bound">1.55</output></span><input id="bound" name="bound" type="range" min="0.8" max="2.2" step="0.01" value="1.55" /></label>
+                <label class="slider-field" for="wExtent"><span>W範囲 <output data-value="wExtent">1.55</output></span><input id="wExtent" name="wExtent" type="range" min="0.8" max="2.2" step="0.01" value="1.55" /></label>
+              </div>
+            </details>
+
+            <section class="inspector-section view-actions">
+              <label class="toggle" for="spin">
+                <input id="spin" type="checkbox" checked />
+                <span><i></i>視点をゆっくり回す</span>
+              </label>
+              <button id="reset-view" type="button">視点を正面へ戻す</button>
+            </section>
+          </div>
+        </aside>
+        <button id="inspector-scrim" class="inspector-scrim" type="button" aria-label="詳細設定を閉じる" tabindex="-1"></button>
+      </form>
+
+      <footer class="site-footer">
+        <span>DRAG / ORBIT</span><span>SCROLL / ZOOM</span><span>SPACE / DRIFT</span>
+      </footer>
+    </main>
+
+    <script src="./frontend/app.bundle.js?v=20260716-2"></script>
+    <script>
+      window.setTimeout(function () {
+        if (!document.body.classList.contains("app-started")) {
+          document.querySelector("#boot-error").hidden = false;
+        }
+      }, 4000);
+    </script>
+  </body>
+</html>
